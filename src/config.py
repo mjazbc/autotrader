@@ -1,2 +1,0 @@
-CRYPTOCOMPARE_TOKEN = '<token>'
-TELEGRAM_BOT_TOKEN = '<token>'
