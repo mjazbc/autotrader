@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
         ]
     )
-    
+
     try:
         with open('./subscribers.json', 'r') as f:
             subscribers = set(json.load(f))
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler("stop", stop))
 
     # Start the Bot
-    # updater.start_polling()
+    updater.start_polling()
     
     t = Trader(wallet= {'ETH' : 0, 'USDT' : 1000}, min_price_change=0.02)
 

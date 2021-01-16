@@ -94,7 +94,7 @@ class Trader:
                     
                     prev_price = price  
                     
-                    tradedstr = self.trade_pretty(traded)
+                    tradedstr = self.trade_pretty(*traded, price)
                     walletstr = self.wallet_pretty(price)
 
                     logging.info(tradedstr)
