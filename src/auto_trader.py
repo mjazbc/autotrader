@@ -4,16 +4,17 @@ import config as cfg
 import requests
 import json
 import logging
+import emoji
 
 class Trader:
     def __init__(self, wallet: dict, min_price_change:float) -> None:
         
         # initialize wallet amounts
-        self.wallet = wallet
         self.tokens = list(wallet.keys())
         self.values = list(wallet.values())
         self.symbol = ''.join(self.tokens)
         self.price_change = min_price_change
+        self.current_price = 0
         
         # initialize price api
         self.api = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms={0}&tsyms={1}&api_key={2}'.format(
@@ -34,44 +35,43 @@ class Trader:
         json_resp = json.loads(response.text)
         return json_resp[self.tokens[0]][self.tokens[1]]
 
-    def buy(self, percent, price) -> float:
+    def buy(self, percent) -> float:
         quantity = self.values[1] * percent
-        self.values[0] += quantity / price
+        self.values[0] += quantity / self.current_price
         self.values[1] -= quantity
 
-        return quantity / price
-        # return 'BOUGHT '+str(quantity / price) +' '+ self.trading_pair[0]+ ' for ' + str(price)
+        return quantity / self.current_price
 
-    def sell(self, percent, price) -> float:
+    def sell(self, percent) -> float:
         quantity = self.values[0] * percent
-        self.values[1] += quantity * price
+        self.values[1] += quantity * self.current_price
         self.values[0] -= quantity
 
         return quantity
         # return'SOLD '+str(quantity) +' '+self.trading_pair[0]+' for ' + str(price)
 
-    def handle_status_change(self, curr, price) -> float:
+    def handle_status_change(self, curr) -> float:
         if curr == 'STRONG_BUY' and self.values[1] > 0:
-            return (self.buy(1, price), 'BUY')
+            return (self.buy(1), 'BUY')
         elif curr == 'BUY' and self.values[1] > 0:
-            return (self.buy(0.4, price), 'BUY')
+            return (self.buy(0.4), 'BUY')
         elif curr == 'SELL' and self.values[0] > 0:
-            return (self.sell(0.4, price), 'SELL')
+            return (self.sell(0.4), 'SELL')
         elif curr == 'STRONG_SELL' and self.values[0] > 0:
-            return (self.sell(1, price), 'SELL')
+            return (self.sell(1), 'SELL')
         else:
             return (0, None)
 
-    def wallet_pretty(self, price) -> str:
-        w = '[WALLET] {:.4f} {} | {:.4f} {} | TOTAL {:.4f} {}'.format(self.values[0], self.tokens[0], 
-            self.values[1], self.tokens[1], self.values[1] + self.values[0] * price, self.tokens[1])
+    def wallet_pretty(self) -> str:
+        w = emoji.emojize(':credit_card:\n{:.4f} {}\n{:.4f} {}\n\nTotal:\n{:.4f} {}'.format(self.values[0], self.tokens[0], 
+            self.values[1], self.tokens[1], self.values[1] + self.values[0] * self.current_price, self.tokens[1]))
         return w
     
-    def trade_pretty(self, quantity, side, price) -> str:
+    def trade_pretty(self, quantity, side) -> str:
         if side == 'SELL':
-            return 'SOLD {:.4f} {} for {:.4f}'.format(quantity, self.tokens[0], price)
+            return emoji.emojize(':left_arrow: Sold {:.4f} {} for {:.4f}'.format(quantity, self.tokens[0], self.current_price))
         else:
-            return 'BOUGHT {:.4f} {} for {:.4f}'.format(quantity, self.tokens[0], price)
+            return emoji.emojize(':right_arrow: Bought {:.4f} {} for {:.4f}'.format(quantity, self.tokens[0], self.current_price))
 
 
     def run(self) -> None:
@@ -82,26 +82,26 @@ class Trader:
         while True: 
             try:
                 rec = self.check_recommendation()
-                price = self.get_price()
+                self.current_price = self.get_price()
 
-                price_change = abs(1 - (prev_price / price))
+                price_change = abs(1 - (prev_price / self.current_price))
 
                 if rec != prev_rec and price_change > self.price_change:
-                    traded = self.handle_status_change(rec, price)
+                    traded = self.handle_status_change(rec)
                     
                     if traded[0] <= 0:
                         continue
                     
-                    prev_price = price
+                    prev_price = self.current_price
                     prev_rec = rec
                     
-                    tradedstr = self.trade_pretty(*traded, price)
-                    walletstr = self.wallet_pretty(price)
+                    tradedstr = self.trade_pretty(*traded)
+                    walletstr = self.wallet_pretty()
 
                     logging.info(tradedstr)
                     logging.info(walletstr)
 
-                    yield tradedstr + '\n\n' + walletstr     
+                    yield tradedstr
                 
             except:
                 logging.exception('Error occurred')

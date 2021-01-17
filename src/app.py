@@ -20,8 +20,15 @@ def stop(update: Update, context: CallbackContext) -> None:
     with open('./subscribers.json', 'w') as f:
         json.dump(list(subscribers), f)
 
-# def wallet(update: Update, context: CallbackContext) -> None:
-#     update.message.reply_text(t.wallet_pretty())
+def wallet(update: Update, context: CallbackContext) -> None:
+     update.message.reply_text(t.wallet_pretty())
+
+def load_subscribers() -> None:
+    try:
+        with open('./subscribers.json', 'r') as f:
+            subscribers = set(json.load(f))
+    except:
+        subscribers = set()
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -33,11 +40,7 @@ if __name__ == "__main__":
         ]
     )
 
-    try:
-        with open('./subscribers.json', 'r') as f:
-            subscribers = set(json.load(f))
-    except:
-        subscribers = set()
+    load_subscribers()
 
     updater = Updater(cfg.TELEGRAM_BOT_TOKEN, use_context=True)
 
