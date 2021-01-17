@@ -24,13 +24,6 @@ def stop(update: Update, context: CallbackContext) -> None:
 def wallet(update: Update, context: CallbackContext) -> None:
      update.message.reply_text(t.wallet_pretty())
 
-def load_subscribers() -> None:
-    try:
-        with open('./subscribers.json', 'r') as f:
-            subscribers = set(json.load(f))
-    except:
-        subscribers = set()
-
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
@@ -41,7 +34,11 @@ if __name__ == "__main__":
         ]
     )
 
-    load_subscribers()
+    try:
+        with open('./subscribers.json', 'r') as f:
+            subscribers = set(json.load(f))
+    except:
+        subscribers = set()
 
     updater = Updater(cfg.TELEGRAM_BOT_TOKEN, use_context=True)
 
@@ -52,7 +49,7 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler("start", subscribe))
     dispatcher.add_handler(CommandHandler("stop", stop))
     dispatcher.add_handler(CommandHandler("wallet", wallet))
-    
+
     # Start the Bot
     updater.start_polling()
     
