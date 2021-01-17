@@ -4,6 +4,7 @@ import config as cfg
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 import json
+import pickle
 
 subscribers = set()
 t = object()
@@ -52,9 +53,13 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler("stop", stop))
 
     # Start the Bot
-    updater.start_polling()
+    # updater.start_polling()
     
-    t = Trader(wallet= {'ETH' : 0, 'USDT' : 1000}, min_price_change=0.02)
+    try:
+        with open('./saved.pickle', 'rb') as f:
+            t = pickle.load(f)
+    except:
+        t = Trader(wallet= {'ETH' : 0, 'USDT' : 1000}, min_price_change=0.02)
 
     for trade in t.run():
         for chatid in subscribers:

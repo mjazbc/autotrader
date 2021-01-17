@@ -5,6 +5,7 @@ import requests
 import json
 import logging
 import emoji
+import pickle
 
 class Trader:
     def __init__(self, wallet: dict, min_price_change:float) -> None:
@@ -73,11 +74,14 @@ class Trader:
         else:
             return emoji.emojize(':right_arrow: Bought {:.4f} {} for {:.4f}'.format(quantity, self.tokens[0], self.current_price))
 
+    def persist(self) -> None:
+        with open('./saved.pickle', 'wb') as f:
+            pickle.dump(self, f)
 
-    def run(self) -> None:
+    def run(self) -> str:
         logging.info('Started trading '+self.symbol)
         prev_rec = 'NONE'
-        prev_price = 0
+        prev_price = self.current_price
 
         while True: 
             try:
@@ -89,6 +93,7 @@ class Trader:
                 if rec != prev_rec and price_change > self.price_change:
                     traded = self.handle_status_change(rec)
                     
+                    self.persist()
                     if traded[0] <= 0:
                         continue
                     
@@ -98,11 +103,12 @@ class Trader:
                     tradedstr = self.trade_pretty(*traded)
                     walletstr = self.wallet_pretty()
 
+                    yield tradedstr
+
                     logging.info(tradedstr)
                     logging.info(walletstr)
 
-                    yield tradedstr
-                
+                    self.persist()
             except:
                 logging.exception('Error occurred')
             finally:
