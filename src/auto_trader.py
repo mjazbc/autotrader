@@ -71,7 +71,7 @@ class Trader:
         if side == 'SELL':
             return 'SOLD {:.4f} {} for {:.4f}'.format(quantity, self.tokens[0], price)
         else:
-            return 'BOUGHT {:.4f} {} for {:.4f}'.format(quantity, self.tokens[1], price)
+            return 'BOUGHT {:.4f} {} for {:.4f}'.format(quantity, self.tokens[0], price)
 
 
     def run(self) -> None:
@@ -92,7 +92,8 @@ class Trader:
                     if traded[0] <= 0:
                         continue
                     
-                    prev_price = price  
+                    prev_price = price
+                    prev_rec = rec
                     
                     tradedstr = self.trade_pretty(*traded, price)
                     walletstr = self.wallet_pretty(price)
@@ -100,9 +101,7 @@ class Trader:
                     logging.info(tradedstr)
                     logging.info(walletstr)
 
-                    yield tradedstr + '\n\n' + walletstr
-
-                prev_rec = rec
+                    yield tradedstr + '\n\n' + walletstr     
                 
             except:
                 logging.exception('Error occurred')

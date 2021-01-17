@@ -6,6 +6,7 @@ from telegram.ext import Updater, CommandHandler, CallbackContext
 import json
 
 subscribers = set()
+t = object()
 
 def subscribe(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Subscribed to autotrader notifications.')
@@ -18,6 +19,9 @@ def stop(update: Update, context: CallbackContext) -> None:
     subscribers.remove(update.effective_chat.id)
     with open('./subscribers.json', 'w') as f:
         json.dump(list(subscribers), f)
+
+# def wallet(update: Update, context: CallbackContext) -> None:
+#     update.message.reply_text(t.wallet_pretty())
 
 if __name__ == "__main__":
     logging.basicConfig(
