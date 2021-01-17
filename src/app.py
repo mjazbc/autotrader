@@ -51,9 +51,10 @@ if __name__ == "__main__":
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", subscribe))
     dispatcher.add_handler(CommandHandler("stop", stop))
-
+    dispatcher.add_handler(CommandHandler("wallet", wallet))
+    
     # Start the Bot
-    # updater.start_polling()
+    updater.start_polling()
     
     try:
         with open('./saved.pickle', 'rb') as f:
