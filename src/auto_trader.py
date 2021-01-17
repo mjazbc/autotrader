@@ -80,7 +80,7 @@ class Trader:
 
     def run(self) -> str:
         logging.info('Started trading '+self.symbol)
-        prev_rec = 'NONE'
+        # prev_rec = 'NONE'
         prev_price = self.current_price
 
         while True: 
@@ -90,7 +90,7 @@ class Trader:
 
                 price_change = abs(1 - (prev_price / self.current_price))
 
-                if rec != prev_rec and price_change > self.price_change:
+                if price_change > self.price_change or 'STRONG' in rec:
                     traded = self.handle_status_change(rec)
                     
                     self.persist()
@@ -98,7 +98,7 @@ class Trader:
                         continue
                     
                     prev_price = self.current_price
-                    prev_rec = rec
+                    # prev_rec = rec
                     
                     tradedstr = self.trade_pretty(*traded)
                     walletstr = self.wallet_pretty()
