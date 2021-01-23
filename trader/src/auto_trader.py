@@ -1,29 +1,25 @@
 import time
 from tradingview_ta import TA_Handler, Interval
-import config as cfg
 import requests
 import json
 import logging
 import emoji
 import pickle
-import uuid
+import os
 
 class Trader:
-    def __init__(self, wallet: dict, min_price_change:float, id:str = None) -> None: 
+    def __init__(self, wallet: dict, min_price_change:float, name:str) -> None: 
         # initialize wallet amounts
         self.tokens = list(wallet.keys())
         self.values = list(wallet.values())
         self.symbol = ''.join(self.tokens)
         self.price_change = min_price_change
         self.current_price = 0
-        self.id = id
-        
-        if not id:
-            self.id = uuid.uuid4().hex
+        self.name = name
         
         # initialize price api
         self.api = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms={0}&tsyms={1}&api_key={2}'.format(
-            self.tokens[0], self.tokens[1], cfg.CRYPTOCOMPARE_TOKEN)
+            self.tokens[0], self.tokens[1], os.environ['CRYPTOCOMPARE_TOKEN'])
         
         # initialize technical analysis api
         self.handler = TA_Handler()
@@ -84,7 +80,6 @@ class Trader:
             pickle.dump(self, f)
 
     def run(self, queue = None):  
-        prev_rec = 'NONE'
         prev_price = self.current_price
         print('running')
         while True: 
@@ -94,7 +89,7 @@ class Trader:
 
                 price_change = abs(1 - (prev_price / self.current_price))
 
-                if price_change > self.price_change or 'STRONG' in rec:
+                if price_change >= self.price_change or 'STRONG' in rec:
                     traded = self.handle_status_change(rec)
                     
                     # self.persist()
@@ -108,7 +103,7 @@ class Trader:
                     walletstr = self.wallet_pretty()
 
                     if queue:
-                        queue.put((self.id, traded))
+                        queue.put((self.name, traded))
 
                     logging.info(tradedstr)
                     logging.info(walletstr)
@@ -121,8 +116,14 @@ class Trader:
 
 
 if __name__ == "__main__":
+
+    try:
+        with open('./saved.pickle', 'rb') as f:
+            t = pickle.load(f)
+    except:
+        t = Trader(wallet= {'ETH' : 0, 'USDT' : 1000}, min_price_change=0.02, name='dev')
+
     log_format = '[%(asctime)s] [%(levelname)s] - %(message)s'
     logging.basicConfig(level='DEBUG', format=log_format)    
-    t = Trader(wallet= {'ETH' : 0, 'USDT' : 1000}, min_price_change=0.02)
     t.run()
     input()

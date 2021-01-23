@@ -1,10 +1,9 @@
 import logging
-from auto_trader import Trader
-import config as cfg
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 import json
 import pickle
+import os
 
 subscribers = set()
 t = object()
@@ -40,7 +39,7 @@ if __name__ == "__main__":
     except:
         subscribers = set()
 
-    updater = Updater(cfg.TELEGRAM_BOT_TOKEN, use_context=True)
+    updater = Updater(os.environ['TELEGRAM_BOT_TOKEN'], use_context=True)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
@@ -53,12 +52,9 @@ if __name__ == "__main__":
     # Start the Bot
     updater.start_polling()
     
-    try:
-        with open('./saved.pickle', 'rb') as f:
-            t = pickle.load(f)
-    except:
-        t = Trader(wallet= {'ETH' : 0, 'USDT' : 1000}, min_price_change=0.02)
+    # for trade in t.run():
+    #     for chatid in subscribers:
+    #         updater.bot.send_message(chat_id = chatid, text = trade)
 
-    for trade in t.run():
-        for chatid in subscribers:
-            updater.bot.send_message(chat_id = chatid, text = trade)
+    input('Press any key to exit')
+   

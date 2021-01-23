@@ -13,21 +13,19 @@ class TraderManager():
             bot[1].queue = self.queue
             self._bots[bot[0]] = bot[1]
 
-    def run(self, *args:int):
+    def run(self, *args:str):
         for bot_id in args:
             threading.Thread(target=self._bots[bot_id].run, args=(self.queue,), daemon=True).start()
-            
-    
+              
     def run_all(self):
         for bot in self._bots.values():
              threading.Thread(target=bot.run, args=(self.queue,), daemon=True).start()
     
-    def add_trader(self, trader:Trader, auto_start:bool=False) -> int:
-        new_id = max(self._bots.keys()) + 1
-        self._bots[new_id] = trader
+    def add_trader(self, trader:Trader, auto_start:bool=False) -> None:
+        self._bots[trader.name] = trader
 
         if auto_start:
-            trader.run()
+            self.run(trader.name)
     
     def listen_all(self):
         while True:
@@ -38,8 +36,8 @@ class TraderManager():
 
     
 if __name__ == "__main__":
-    t = Trader(wallet= {'ETH' : 0, 'USDT' : 1000}, min_price_change = 0.02, id='slow')
-    t2 = Trader(wallet= {'BTC' : 0, 'USDT' : 1000}, min_price_change = 0.005, id= 'fast')
+    t = Trader(wallet= {'ETH' : 0, 'USDT' : 1000}, min_price_change = 0.02, name='slow')
+    t2 = Trader(wallet= {'BTC' : 0, 'USDT' : 1000}, min_price_change = 0.005, name= 'fast')
     tm = TraderManager(t, t2)
 
     tm.run_all()
