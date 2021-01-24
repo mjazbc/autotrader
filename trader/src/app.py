@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 import json
-from trader.src.auto_trader import Trader
-from trader.src.trader_manager import TraderManager
+from auto_trader import Trader
+from trader_manager import TraderManager
 from flask import Flask, request, jsonify
 
 
@@ -38,4 +38,4 @@ def get_bot_wallet(name):
 tm = TraderManager()
 
 tm.run()
-app.run()
+app.run(host='0.0.0.0')
