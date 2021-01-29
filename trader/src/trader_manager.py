@@ -3,13 +3,15 @@ from auto_trader import Trader
 from queue import Queue
 import time
 import threading
+import db
 
 
 class TraderManager():
     def __init__(self, *args:Trader) -> None:
-        self._bots = dict()
+        active_bots = db.load_active_traders()
+        self._bots = {bot : Trader(db.load_trader_config(bot)) for bot in active_bots}
         self.queue = Queue()
-        for bot in enumerate(args):
+        for bot in self._bots:
             bot[1].queue = self.queue
             self._bots[bot[0]] = bot[1]
 
@@ -36,9 +38,7 @@ class TraderManager():
 
     
 if __name__ == "__main__":
-    t = Trader(wallet= {'ETH' : 0, 'USDT' : 1000}, min_price_change = 0.02, name='slow')
-    t2 = Trader(wallet= {'BTC' : 0, 'USDT' : 1000}, min_price_change = 0.005, name= 'fast')
-    tm = TraderManager(t, t2)
+    tm = TraderManager()
 
     tm.run_all()
     tm.listen_all()
