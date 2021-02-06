@@ -1,0 +1,8 @@
+{
+    "python.analysis.extraPaths": [
+        "/home/maticj/.local/lib/python3.6/site-packages",
+        "./trader/src",
+        "./chatbot/src"
+
+    ]
+}

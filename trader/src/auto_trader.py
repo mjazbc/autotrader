@@ -13,7 +13,7 @@ class Trader:
     def __init__(self, config) -> None: 
         self._config = config
 
-        self._current_price = 0
+        self._current_price = 0.0000001
         
         # initialize price api
         self._api = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms={0}&tsyms={1}&api_key={2}'.format(
@@ -21,7 +21,7 @@ class Trader:
         
         # initialize technical analysis api
         self._handler = TA_Handler()
-        self._handler.set_symbol_as(self.symbol)
+        self._handler.set_symbol_as(self._config.symbol)
         self._handler.set_exchange_as_crypto_or_stock("BINANCE")
         self._handler.set_screener_as_crypto()
         self._handler.set_interval_as(Interval.INTERVAL_15_MINUTES)
@@ -74,12 +74,12 @@ class Trader:
             pickle.dump(self, f)
 
     def run(self, queue = None):  
-        prev_price = self._current_price
+        prev_price = self._current_price # small number to avoid division by zero on startup
         print('running')
         while True: 
             try:
                 rec = self.check_recommendation()
-                self.current_price = self.get_price()
+                self._current_price = self.get_price()
 
                 price_change = abs(1 - (prev_price / self._current_price))
 
@@ -109,7 +109,7 @@ class Trader:
 
 
 if __name__ == "__main__":
-
+    pass
     try:
         with open('./saved.pickle', 'rb') as f:
             t = pickle.load(f)

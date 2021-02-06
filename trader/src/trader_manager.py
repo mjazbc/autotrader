@@ -7,17 +7,14 @@ import db
 
 
 class TraderManager():
-    def __init__(self, *args:Trader) -> None:
+    def __init__(self) -> None:
         active_bots = db.load_active_traders()
         self._bots = {bot : Trader(db.load_trader_config(bot)) for bot in active_bots}
         self.queue = Queue()
-        for bot in self._bots:
-            bot[1].queue = self.queue
-            self._bots[bot[0]] = bot[1]
 
     def run(self, *args:str):
-        for bot_id in args:
-            threading.Thread(target=self._bots[bot_id].run, args=(self.queue,), daemon=True).start()
+        for name in args:
+            threading.Thread(target=self._bots[name].run, args=(self.queue,), daemon=True).start()
               
     def run_all(self):
         for bot in self._bots.values():

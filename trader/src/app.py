@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 import json
+from os import abort
+from trader.src.trader_config import TraderConfig
 from auto_trader import Trader
 from trader_manager import TraderManager
 from flask import Flask, request, jsonify
@@ -13,9 +15,13 @@ app = Flask(__name__)
 def create_bot(name):
     bot = json.loads(request.data)
 
-    #TODO check if bot with same name already exists
+    if db.load_trader_config(name):
+        raise Exception('Trader with name %s already exists.'.format(name))
+    
+    config = TraderConfig(name, bot['wallet'], min_price_change = bot['strategy']['params']['price_change'])
+    db.insert_trader_config(config, bot['owner_id'])
 
-    t = Trader(wallet = bot['wallet'], min_price_change = bot['strategy']['params']['price_change'], name=name)
+    t = Trader(config)
     tm.add_trader(t, auto_start=True)
     
     return jsonify(bot)
@@ -41,5 +47,5 @@ def create_user():
 
 tm = TraderManager()
 
-tm.run()
+tm.run_all()
 app.run(host='0.0.0.0')

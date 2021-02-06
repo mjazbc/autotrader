@@ -1,4 +1,5 @@
 from trader_config import TraderConfig, Wallet
+from itertools import chain
 import psycopg2
 import os
 import logging
@@ -31,6 +32,21 @@ def _insert(sql, *args) ->int:
             conn.close()
 
     return id
+
+def _insert_many(sql, l) ->int:
+    conn = None
+    try:
+        conn = psycopg2.connect(**_params)
+        cur = conn.cursor()
+        cur.executemany(sql, l)
+        conn.commit()
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+        logging.exception(error)
+    finally:
+        if conn is not None:
+            conn.close()
 
 def _select(sql, *args):
     conn = None
@@ -68,16 +84,18 @@ def insert_user(telegram_id:str) -> int:
 def insert_trader_config(config:TraderConfig, owner_id:int) -> None:
 
     sql = """INSERT INTO trader_config(name, active, owner_id, public) 
-             VALUES(%s, %b, %d, %b)"""
+             VALUES(%s, %s, %s, %s) RETURNING id"""
     
     config_id = _insert(sql, config.name, True, owner_id, True)
 
     sql = """INSERT INTO trader_config_params(trader_config_id, key, value) 
-             VALUES(%d, %s, %s)"""
-            
-    _insert(sql, config, 'min_price_change', config.min_change_price)
+             VALUES(%s, %s, %s)"""
+    _insert(sql, config_id, 'min_price_change', config.min_change_price)
 
-    return config_id
+    sql = "INSERT INTO trader_wallet(trader_config_id, token, amount) VALUES (%s,%s,%s)"
+    
+    pairs = [(config_id, key, value,) for key, value in zip(config.wallet.tokens, config.wallet.values)]
+    _insert_many(sql, pairs)
 
 def load_active_traders():
     traders = _select('SELECT name FROM trader_config WHERE active = True')
@@ -91,7 +109,7 @@ def load_trader_config(name):
 
     params = load_trader_config_params(name)
 
-    return TraderConfig(name, wallet, params)
+    return TraderConfig(name, wallet, **params)
 
 def load_trader_wallet(name):
     sql = """SELECT tw.token, tw.amount FROM trader_config tc 
@@ -113,7 +131,11 @@ def load_trader_config_params(name):
 
 
 if __name__ == '__main__':
-    # insert_user('1525910880')
-    id = find_user('1525910880')
     pass
+    sql = "INSERT INTO trader_wallet(trader_config_id, token, amount) VALUES (%s,%s,%s)"
+    
+    pairs = [(2, 'LTC', 0,), (2, 'USDT', 1000,)]
+    # pairs = [(config_id, key, value) for key, value in zip(config.wallet.tokens, config.wallet.values, )]
+    # _insert_many(sql, pairs)
+    
     # connect()
